@@ -1,6 +1,6 @@
 import { request, uploadArquivos } from "../api.js";
 
-const POPULATE = "populate[imovel]=true&populate[imagens]=true";
+const POPULATE = "populate[imovel]=true&populate[imagens]=true&populate[usuario][fields][0]=username&populate[usuario][fields][1]=telefone";
 
 export async function buscarAnuncio(id) {
     const res = await request(`/anuncios/${id}?${POPULATE}`, { auth: false });

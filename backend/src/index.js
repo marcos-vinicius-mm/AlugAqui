@@ -11,6 +11,9 @@ const ACOES_AUTENTICADO = [
   'api::anuncio.anuncio.findOne',
   'api::anuncio.anuncio.update',
   'api::anuncio.anuncio.delete',
+  'api::comentario.comentario.find',
+  'api::comentario.comentario.findOne',
+  'api::comentario.comentario.create',
   'plugin::upload.content-api.upload',
 ];
 
@@ -18,6 +21,8 @@ const ACOES_PUBLICO = [
   'api::anuncio.anuncio.find',
   'api::anuncio.anuncio.findOne',
   'api::imovel.imovel.findOne',
+  'api::comentario.comentario.find',
+  'api::comentario.comentario.findOne',
 ];
 
 async function garantirPermissoes(strapi, tipoRole, acoes) {

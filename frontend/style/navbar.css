@@ -76,18 +76,17 @@
     color: var(--cor-principal);
 }
 
-/* Link de destaque (ex.: "Anunciar imóvel") */
-#menuLateral .link-destaque {
+#menuLateral .nav-link.active {
     background-color: var(--cor-principal);
     color: var(--cor-texto-claro);
 }
 
-#menuLateral .link-destaque .bi {
+#menuLateral .nav-link.active .bi {
     color: var(--cor-texto-claro);
 }
 
-#menuLateral .link-destaque:hover,
-#menuLateral .link-destaque:focus-visible {
+#menuLateral .nav-link.active:hover,
+#menuLateral .nav-link.active:focus-visible {
     background-color: var(--cor-principal-escura);
     color: var(--cor-texto-claro);
 }

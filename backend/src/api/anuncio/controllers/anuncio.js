@@ -27,13 +27,26 @@ module.exports = createCoreController('api::anuncio.anuncio', ({ strapi }) => ({
     const docId = ctx.params.id;
     const documento = await strapi.documents('api::anuncio.anuncio').findOne({
       documentId: docId,
-      populate: ['imovel', 'imagens'],
+      populate: {
+        imovel: true,
+        imagens: true,
+        usuario: {
+          fields: ['username', 'telefone'],
+        },
+      },
     });
 
     if (!documento) return ctx.notFound();
 
-    const sanitized = await this.sanitizeOutput(documento, ctx);
-    return this.transformResponse(sanitized);
+    const sanitizado = await this.sanitizeOutput(documento, ctx);
+    if (sanitizado && documento.usuario) {
+      sanitizado.usuario = {
+        id: documento.usuario.id,
+        username: documento.usuario.username,
+        telefone: documento.usuario.telefone,
+      };
+    }
+    return this.transformResponse(sanitizado);
   },
 
   async create(ctx) {

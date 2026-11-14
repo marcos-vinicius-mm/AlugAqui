@@ -19,28 +19,28 @@
       <h1 class="marca"><i class="bi bi-houses fs-1"></i>Alug<span>Aqui</span></h1>
       <h2>Cadastre seu imóvel para alugar</h2>
     </div>
-    <div id="navbar" data-ocultar="anunciar"></div>
+    <div id="navbar"></div>
   </header>
 
   <main class="container py-4">
-    <form id="form-anuncio" class="form-painel">
+    <form id="form-anuncio" class="form-painel" aria-labelledby="titulo-form">
 
       <h2 class="form-titulo" id="titulo-form">Novo anúncio</h2>
 
       <div class="mb-3">
         <label class="form-label" for="titulo">Título</label>
-        <input class="form-control" type="text" id="titulo" name="titulo" required placeholder="Ex.: Apartamento 2 quartos no Centro">
+        <input class="form-control" type="text" id="titulo" name="titulo" required minlength="3" maxlength="120" placeholder="Ex.: Apartamento 2 quartos no Centro">
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="descricao">Descrição</label>
-        <textarea class="form-control" id="descricao" name="descricao" rows="3" placeholder="Destaques do imóvel"></textarea>
+        <label class="form-label" for="descricao">Descrição <span class="opcional">(opcional)</span></label>
+        <textarea class="form-control" id="descricao" name="descricao" rows="3" maxlength="255" placeholder="Destaques do imóvel"></textarea>
       </div>
 
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label" for="preco">Preço mensal (R$)</label>
-          <input class="form-control" type="number" id="preco" name="preco" required min="0" step="1" placeholder="1500">
+          <input class="form-control" type="number" id="preco" name="preco" required min="1" max="999999" step="1" placeholder="1500">
         </div>
         <div class="col-md-6">
           <label class="form-label" for="tipo">Tipo</label>
@@ -54,27 +54,27 @@
         </div>
         <div class="col-md-6">
           <label class="form-label" for="bairro">Bairro</label>
-          <input class="form-control" type="text" id="bairro" name="bairro" required placeholder="Centro">
+          <input class="form-control" type="text" id="bairro" name="bairro" required maxlength="80" autocomplete="address-level2" placeholder="Centro">
         </div>
         <div class="col-md-6">
           <label class="form-label" for="rua">Rua</label>
-          <input class="form-control" type="text" id="rua" name="rua" placeholder="Rua Epitácio Pessoa">
+          <input class="form-control" type="text" id="rua" name="rua" required maxlength="120" autocomplete="street-address" placeholder="Rua Epitácio Pessoa">
         </div>
         <div class="col-md-6">
-          <label class="form-label" for="numero">Número</label>
-          <input class="form-control" type="text" id="numero" name="numero" placeholder="Opcional">
+          <label class="form-label" for="numero">Número <span class="opcional">(opcional)</span></label>
+          <input class="form-control" type="text" id="numero" name="numero" maxlength="10" autocomplete="off" placeholder="123">
         </div>
         <div class="col-md-6">
           <label class="form-label" for="cep">CEP</label>
-          <input class="form-control" type="text" id="cep" name="cep" inputmode="numeric" placeholder="63900-000" maxlength="9">
+          <input class="form-control" type="text" id="cep" name="cep" required inputmode="numeric" autocomplete="postal-code" placeholder="63900-000" maxlength="9" pattern="[0-9]{5}-[0-9]{3}" title="Use o formato 63900-000">
         </div>
         <div class="col-md-6">
           <label class="form-label" for="qtd_quartos">Quartos</label>
-          <input class="form-control" type="number" id="qtd_quartos" name="qtd_quartos" required min="0" value="1">
+          <input class="form-control" type="number" id="qtd_quartos" name="qtd_quartos" required min="0" max="20" step="1" value="1">
         </div>
         <div class="col-md-6">
           <label class="form-label" for="qtd_banheiros">Banheiros</label>
-          <input class="form-control" type="number" id="qtd_banheiros" name="qtd_banheiros" required min="0" value="1">
+          <input class="form-control" type="number" id="qtd_banheiros" name="qtd_banheiros" required min="0" max="20" step="1" value="1">
         </div>
       </div>
 
@@ -91,7 +91,7 @@
 
       <div class="mb-3">
         <label class="form-label" for="imagens">Fotos</label>
-        <input class="form-control" type="file" name="imagens" id="imagens" accept="image/*" multiple>
+        <input class="form-control" type="file" name="imagens" id="imagens" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
         <div class="form-text" id="ajuda-fotos">Selecione ao menos uma foto do imóvel.</div>
       </div>
 
