@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style/componentes.css">
   <link rel="stylesheet" href="style/paginas.css">
-  <link rel="stylesheet" href="style/Admin.css">
+  <link rel="stylesheet" href="style/admin.css">
   <link rel="stylesheet" href="style/navbar.css">
 </head>
 <body>
@@ -62,13 +62,15 @@
         <h2>Fila de denúncias</h2>
 
         <form class="filtros">
-          <label for="filtro-status">Status:</label>
-          <select id="filtro-status">
+          <select id="filtro-status" aria-label="Status da denúncia">
             <option>Pendentes</option>
             <option>Analisadas</option>
             <option>Todas</option>
           </select>
-          <button type="submit" class="btn btn-azul">Filtrar</button>
+          <div class="busca">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="busca-denuncia" placeholder="Buscar por denunciante ou conteúdo" aria-label="Buscar por denunciante ou conteúdo" autocomplete="off">
+          </div>
         </form>
 
         <table>
@@ -93,9 +95,10 @@
         <h2>Gerenciar anúncios</h2>
 
         <form class="filtros">
-          <label for="busca-anuncio">Buscar:</label>
-          <input type="text" id="busca-anuncio" placeholder="Título ou bairro">
-          <button type="submit" class="btn btn-azul">Buscar</button>
+          <div class="busca">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="busca-anuncio" placeholder="Buscar por título ou bairro" aria-label="Buscar por título ou bairro" autocomplete="off">
+          </div>
         </form>
 
         <table>
@@ -116,6 +119,18 @@
       <!-- Usuários -->
       <section id="usuarios">
         <h2>Gerenciar usuários</h2>
+
+        <form class="filtros">
+          <select id="filtro-conta" aria-label="Situação da conta">
+            <option>Todas</option>
+            <option>Ativas</option>
+            <option>Suspensas</option>
+          </select>
+          <div class="busca">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="busca-usuario" placeholder="Buscar por nome ou e-mail" aria-label="Buscar por nome ou e-mail" autocomplete="off">
+          </div>
+        </form>
 
         <table>
           <thead>

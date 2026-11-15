@@ -9,6 +9,10 @@ const TAMANHO_PAGINA = "100";
 
 let usuarioAtual = null;
 
+// listas carregadas do servidor; a busca por nome de denúncias e usuários filtra estas listas
+let denunciasCarregadas = [];
+let usuariosCarregados = [];
+
 /* ========================= utilidades ========================= */
 
 function $(seletor, base = document) {
@@ -39,6 +43,21 @@ function formatarPreco(valor) {
 function resumir(texto, max = 60) {
     if (!texto) return "—";
     return texto.length > max ? texto.slice(0, max - 1) + "…" : texto;
+}
+
+// minúsculas e sem acento: "José" encontra "jose"
+function normalizar(texto) {
+    return String(texto ?? "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
+}
+
+// true se algum dos campos contém o termo digitado
+function contem(termo, ...campos) {
+    const procurado = normalizar(termo.trim());
+    if (!procurado) return true;
+    return campos.some(campo => normalizar(campo).includes(procurado));
 }
 
 const MOTIVOS = {
@@ -270,6 +289,23 @@ function linhaDenuncia(d) {
     ]);
 }
 
+// mostra a lista de denúncias já carregada, aplicando a busca por nome
+function mostrarDenuncias() {
+    const tbody = $("#denuncias tbody");
+    const termo = $("#busca-denuncia").value;
+
+    const lista = denunciasCarregadas.filter(d =>
+        contem(termo, d.denunciante?.username, d.denunciante?.email, conteudoDenunciado(d))
+    );
+
+    if (!lista.length) {
+        return mensagemTabela(tbody, termo.trim()
+            ? "Nenhuma denúncia corresponde à busca."
+            : "Nenhuma denúncia encontrada.");
+    }
+    tbody.replaceChildren(...lista.map(linhaDenuncia));
+}
+
 async function carregarDenuncias() {
     const tbody = $("#denuncias tbody");
     mensagemTabela(tbody, "Carregando...");
@@ -292,9 +328,10 @@ async function carregarDenuncias() {
 
     try {
         const { data } = await request("/denuncias" + consulta(parametros));
-        if (!data.length) return mensagemTabela(tbody, "Nenhuma denúncia encontrada.");
-        tbody.replaceChildren(...data.map(linhaDenuncia));
+        denunciasCarregadas = data;
+        mostrarDenuncias();
     } catch (erro) {
+        denunciasCarregadas = [];
         mensagemTabela(tbody, `Erro ao carregar denúncias: ${erro.message}`);
     }
 }
@@ -415,6 +452,27 @@ function linhaUsuario(u) {
     ]);
 }
 
+// mostra a lista de usuários já carregada, aplicando o filtro de conta e a busca por nome
+function mostrarUsuarios() {
+    const tbody = $("#usuarios tbody");
+    const conta = $("#filtro-conta").value;     // Todas | Ativas | Suspensas
+    const termo = $("#busca-usuario").value;
+
+    const lista = usuariosCarregados.filter(u => {
+        if (conta === "Ativas" && u.blocked) return false;
+        if (conta === "Suspensas" && !u.blocked) return false;
+        return contem(termo, u.username, u.email);
+    });
+
+    if (!lista.length) {
+        const filtrando = termo.trim() || conta !== "Todas";
+        return mensagemTabela(tbody, filtrando
+            ? "Nenhum usuário corresponde ao filtro."
+            : "Nenhum usuário encontrado.");
+    }
+    tbody.replaceChildren(...lista.map(linhaUsuario));
+}
+
 async function carregarUsuarios() {
     const tbody = $("#usuarios tbody");
     const contador = document.querySelectorAll("#resumo .card-numero")[1];
@@ -422,12 +480,13 @@ async function carregarUsuarios() {
 
     try {
         const resposta = await request("/users" + consulta({ populate: "role", sort: "createdAt:desc" }));
-        const lista = Array.isArray(resposta) ? resposta : (resposta.data || []);
+        usuariosCarregados = Array.isArray(resposta) ? resposta : (resposta.data || []);
 
-        contador.textContent = lista.length;
-        if (!lista.length) return mensagemTabela(tbody, "Nenhum usuário encontrado.");
-        tbody.replaceChildren(...lista.map(linhaUsuario));
+        // o contador do resumo mostra o total, sem aplicar filtro
+        contador.textContent = usuariosCarregados.length;
+        mostrarUsuarios();
     } catch (erro) {
+        usuariosCarregados = [];
         contador.textContent = "?";
         mensagemTabela(tbody, `Erro ao carregar usuários: ${erro.message}`);
     }
@@ -445,16 +504,33 @@ function recarregarTudo() {
 }
 
 function ligarEventos() {
+    // denúncias: o status recarrega do servidor; a busca por nome filtra na hora
     $("#denuncias .filtros").addEventListener("submit", e => {
         e.preventDefault();
         carregarDenuncias();
     });
     $("#filtro-status").addEventListener("change", carregarDenuncias);
+    $("#busca-denuncia").addEventListener("input", mostrarDenuncias);
 
+    // anúncios: a busca é feita no servidor (título ou bairro)
     $("#anuncios .filtros").addEventListener("submit", e => {
         e.preventDefault();
         carregarAnuncios();
     });
+    // espera o usuário parar de digitar para não consultar o servidor a cada letra
+    let espera;
+    $("#busca-anuncio").addEventListener("input", () => {
+        clearTimeout(espera);
+        espera = setTimeout(carregarAnuncios, 300);
+    });
+
+    // usuários: filtro de conta e busca por nome filtram a lista já carregada
+    $("#usuarios .filtros").addEventListener("submit", e => {
+        e.preventDefault();
+        mostrarUsuarios();
+    });
+    $("#filtro-conta").addEventListener("change", mostrarUsuarios);
+    $("#busca-usuario").addEventListener("input", mostrarUsuarios);
 }
 
 async function iniciar() {
