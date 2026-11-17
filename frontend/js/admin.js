@@ -1,6 +1,3 @@
-// Painel do administrador: proteção da página + dados do Strapi.
-// Substitui o guarda-admin.js
-
 import { request } from "./api.js";
 import { obterUsuario } from "./auth.js";
 
@@ -9,17 +6,16 @@ const TAMANHO_PAGINA = "100";
 
 let usuarioAtual = null;
 
-// listas carregadas do servidor; a busca por nome de denúncias e usuários filtra estas listas
 let denunciasCarregadas = [];
 let usuariosCarregados = [];
 
-/* ========================= utilidades ========================= */
+/* utilidades */
 
 function $(seletor, base = document) {
     return base.querySelector(seletor);
 }
 
-// Monta elementos.
+// Monta elementos
 function criar(tag, classes, texto) {
     const el = document.createElement(tag);
     if (classes) el.className = classes;
@@ -45,7 +41,6 @@ function resumir(texto, max = 60) {
     return texto.length > max ? texto.slice(0, max - 1) + "…" : texto;
 }
 
-// minúsculas e sem acento: "José" encontra "jose"
 function normalizar(texto) {
     return String(texto ?? "")
         .normalize("NFD")
@@ -236,7 +231,6 @@ async function removerConteudoDenunciado(d) {
 
     if (!confirm(`Remover ${alvo.nome} denunciado? Esta ação não pode ser desfeita.`)) return;
 
-    // marca a denúncia antes
     await request(`/denuncias/${d.documentId}`, {
         method: "PUT",
         body: { data: { status_denuncia: "procedente" } },
@@ -289,7 +283,6 @@ function linhaDenuncia(d) {
     ]);
 }
 
-// mostra a lista de denúncias já carregada, aplicando a busca por nome
 function mostrarDenuncias() {
     const tbody = $("#denuncias tbody");
     const termo = $("#busca-denuncia").value;
@@ -339,7 +332,8 @@ async function carregarDenuncias() {
 // anúncios
 
 async function alterarStatusAnuncio(a, novoStatus) {
-    await request(`/anuncios/${a.documentId}`, {
+
+    await request(`/anuncios/${a.documentId}?status=published`, {
         method: "PUT",
         body: { data: { status_anuncio: novoStatus } },
     });
@@ -452,7 +446,6 @@ function linhaUsuario(u) {
     ]);
 }
 
-// mostra a lista de usuários já carregada, aplicando o filtro de conta e a busca por nome
 function mostrarUsuarios() {
     const tbody = $("#usuarios tbody");
     const conta = $("#filtro-conta").value;     // Todas | Ativas | Suspensas
@@ -482,7 +475,6 @@ async function carregarUsuarios() {
         const resposta = await request("/users" + consulta({ populate: "role", sort: "createdAt:desc" }));
         usuariosCarregados = Array.isArray(resposta) ? resposta : (resposta.data || []);
 
-        // o contador do resumo mostra o total, sem aplicar filtro
         contador.textContent = usuariosCarregados.length;
         mostrarUsuarios();
     } catch (erro) {
@@ -504,7 +496,7 @@ function recarregarTudo() {
 }
 
 function ligarEventos() {
-    // denúncias: o status recarrega do servidor; a busca por nome filtra na hora
+
     $("#denuncias .filtros").addEventListener("submit", e => {
         e.preventDefault();
         carregarDenuncias();
@@ -512,19 +504,18 @@ function ligarEventos() {
     $("#filtro-status").addEventListener("change", carregarDenuncias);
     $("#busca-denuncia").addEventListener("input", mostrarDenuncias);
 
-    // anúncios: a busca é feita no servidor (título ou bairro)
     $("#anuncios .filtros").addEventListener("submit", e => {
         e.preventDefault();
         carregarAnuncios();
     });
-    // espera o usuário parar de digitar para não consultar o servidor a cada letra
+
     let espera;
     $("#busca-anuncio").addEventListener("input", () => {
         clearTimeout(espera);
         espera = setTimeout(carregarAnuncios, 300);
     });
 
-    // usuários: filtro de conta e busca por nome filtram a lista já carregada
+    // usuários: filtro de conta e busca por nome
     $("#usuarios .filtros").addEventListener("submit", e => {
         e.preventDefault();
         mostrarUsuarios();

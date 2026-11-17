@@ -101,7 +101,6 @@ section {
   color: var(--cor-erro);
 }
 
-/* Filtros: uma única linha, com o campo de busca ocupando o espaço que sobra */
 .filtros {
   display: flex;
   align-items: center;
@@ -253,7 +252,6 @@ td.vazio {
     flex-direction: column;
   }
 
-  /* no celular o filtro fica em cima e a busca embaixo, cada um na largura toda */
   .filtros {
     flex-direction: column;
     align-items: stretch;
