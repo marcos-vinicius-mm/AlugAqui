@@ -4,16 +4,15 @@ export async function criarImovel(imovel) {
     const corpo = {
         tipo: imovel.tipo,
         bairro: imovel.bairro,
+        rua: imovel.rua,
         qtd_quartos: Number(imovel.qtd_quartos),
         qtd_banheiros: Number(imovel.qtd_banheiros),
         aceita_pets: Boolean(imovel.aceita_pets),
         mobiliado: Boolean(imovel.mobiliado),
+        cep: Number(imovel.cep),
     };
 
-    
-    if (imovel.rua) corpo.rua = imovel.rua;
     if (imovel.numero) corpo.numero = imovel.numero;
-    if (imovel.cep) corpo.cep = Number(imovel.cep);
 
     const resposta = await request("/imoveis", {
         method: "POST",

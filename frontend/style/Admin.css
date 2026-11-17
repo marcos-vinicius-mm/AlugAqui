@@ -101,21 +101,57 @@ section {
   color: var(--cor-erro);
 }
 
-/* Filtros */
 .filtros {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-.filtros label {
-  margin-right: 5px;
+.filtros select,
+.filtros input {
+  height: 38px;
+  border: 1px solid #ccd3dc;
+  border-radius: 6px;
+  background-color: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  margin: 0;
 }
 
-input,
-select {
-  padding: 7px;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  margin-right: 8px;
+.filtros select {
+  flex: 0 0 auto;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.busca {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.busca i {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a94a3;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.busca input {
+  width: 100%;
+  padding: 0 12px 0 34px;
+}
+
+.filtros select:focus,
+.filtros input:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+  box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18);
 }
 
 /* Tabelas */
@@ -139,6 +175,12 @@ th {
 
 tr:hover td {
   background-color: #f5f8fc;
+}
+
+td.vazio {
+  text-align: center;
+  color: #6b7686;
+  padding: 24px 10px;
 }
 
 /* Botões */
@@ -208,6 +250,16 @@ tr:hover td {
 
   .cards {
     flex-direction: column;
+  }
+
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .busca {
+    flex: none;
   }
 
   table {

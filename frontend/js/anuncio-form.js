@@ -18,9 +18,15 @@ const ajudaFotos = document.getElementById("ajuda-fotos");
 const tituloForm = document.getElementById("titulo-form");
 const btnSalvar = document.getElementById("btn-salvar");
 const acoesForm = document.getElementById("acoes-form");
+const campoCep = document.getElementById("cep");
 
-let imagensExistentesIds = [];
-let imagensExistentesCache = [];
+const MAX_FOTOS = 8;
+const MAX_TAMANHO_MB = 5;
+const TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+let imagensExistentes = [];
+let fotosNovas = [];
+let urlsPreview = [];
 let documentoImovel = null;
 let formularioAlterado = false;
 
@@ -33,6 +39,18 @@ function mostrarMsg(texto, erro = true) {
 
 function limparMsg() {
   msg.hidden = true;
+}
+
+function marcarInvalido(el) {
+  if (!el) return;
+  el.classList.add("is-invalid");
+  el.focus();
+}
+
+function limparInvalidos() {
+  for (const el of form.querySelectorAll(".is-invalid")) {
+    el.classList.remove("is-invalid");
+  }
 }
 
 function definirFormularioAtivo(ativo) {
@@ -49,7 +67,7 @@ function campo(formulario, nome) {
 }
 
 function apenasDigitosCep(valor) {
-  const digitos = String(valor ?? "").replace(/\D/g, "");
+  const digitos = String(valor ?? "").replace(/\D/g, "").slice(0, 8);
   return digitos || undefined;
 }
 
@@ -58,6 +76,103 @@ function cepParaCampo(valor) {
   if (!digitos) return "";
   if (digitos.length <= 5) return digitos;
   return `${digitos.slice(0, 5)}-${digitos.slice(5, 8)}`;
+}
+
+function totalFotos() {
+  return imagensExistentes.length + fotosNovas.length;
+}
+
+function chaveArquivo(arquivo) {
+  return `${arquivo.name}-${arquivo.size}-${arquivo.lastModified}`;
+}
+
+function arquivoValido(arquivo) {
+  if (!TIPOS_ACEITOS.includes(arquivo.type)) {
+    return `"${arquivo.name}" não é uma imagem válida. Use JPG, PNG, WEBP ou GIF.`;
+  }
+  if (arquivo.size > MAX_TAMANHO_MB * 1024 * 1024) {
+    return `"${arquivo.name}" passa de ${MAX_TAMANHO_MB} MB.`;
+  }
+  return null;
+}
+
+function limparUrlsPreview() {
+  for (const url of urlsPreview) URL.revokeObjectURL(url);
+  urlsPreview = [];
+}
+
+function criarItemPreview(src, rotulo, aoRemover) {
+  const item = document.createElement("div");
+  item.className = "preview-item";
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = rotulo;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-remover-foto";
+  btn.setAttribute("aria-label", `Remover ${rotulo}`);
+  const marca = document.createElement("span");
+  marca.setAttribute("aria-hidden", "true");
+  marca.textContent = "×";
+  btn.appendChild(marca);
+  btn.addEventListener("click", () => {
+    formularioAlterado = true;
+    limparMsg();
+    aoRemover();
+    atualizarPreview();
+  });
+
+  item.append(img, btn);
+  return item;
+}
+
+function atualizarPreview() {
+  limparUrlsPreview();
+  preview.replaceChildren();
+
+  imagensExistentes.forEach((img, i) => {
+    preview.appendChild(
+      criarItemPreview(urlMidia(img), `foto ${i + 1}`, () => {
+        imagensExistentes = imagensExistentes.filter((item) => item !== img);
+      }),
+    );
+  });
+
+  fotosNovas.forEach((arquivo) => {
+    const url = URL.createObjectURL(arquivo);
+    urlsPreview.push(url);
+    preview.appendChild(
+      criarItemPreview(url, arquivo.name, () => {
+        fotosNovas = fotosNovas.filter((item) => item !== arquivo);
+      }),
+    );
+  });
+}
+
+function adicionarArquivos(lista) {
+  const jaTem = new Set(fotosNovas.map(chaveArquivo));
+  let recusou = null;
+
+  for (const arquivo of lista) {
+    if (totalFotos() >= MAX_FOTOS) {
+      recusou = `Pode enviar no máximo ${MAX_FOTOS} fotos.`;
+      break;
+    }
+    const erro = arquivoValido(arquivo);
+    if (erro) {
+      recusou = erro;
+      continue;
+    }
+    if (jaTem.has(chaveArquivo(arquivo))) continue;
+    fotosNovas.push(arquivo);
+    jaTem.add(chaveArquivo(arquivo));
+  }
+
+  inputImagens.value = "";
+  atualizarPreview();
+  if (recusou) mostrarMsg(recusou);
 }
 
 function lerDados(formulario) {
@@ -72,65 +187,61 @@ function lerDados(formulario) {
     preco: Number(preco?.value),
     tipo: tipo?.value ?? "",
     bairro: bairro?.value?.trim() ?? "",
-    rua: campo(formulario, "rua")?.value?.trim() || undefined,
+    rua: campo(formulario, "rua")?.value?.trim() ?? "",
     numero: campo(formulario, "numero")?.value?.trim() || undefined,
     cep: apenasDigitosCep(campo(formulario, "cep")?.value),
     qtd_quartos: Number(campo(formulario, "qtd_quartos")?.value),
     qtd_banheiros: Number(campo(formulario, "qtd_banheiros")?.value),
     aceita_pets: campo(formulario, "aceita_pets")?.checked ?? false,
     mobiliado: campo(formulario, "mobiliado")?.checked ?? false,
-    arquivosNovos: [...(inputImagens.files || [])],
+    arquivosNovos: [...fotosNovas],
   };
 }
 
-function validar(dados, editando) {
-  if (!dados.titulo) return "Informe o título do anúncio.";
-  if (!dados.tipo) return "Selecione o tipo do imóvel.";
-  if (!dados.bairro) return "Informe o bairro.";
-  if (!Number.isFinite(dados.preco) || dados.preco < 0) {
-    return "Informe um preço válido.";
+function validar(dados) {
+  if (dados.titulo.length < 3) {
+    return { texto: "O título precisa ter pelo menos 3 caracteres.", campo: campo(form, "titulo") };
   }
-  if (!editando && dados.arquivosNovos.length === 0) {
-    return "Adicione pelo menos uma foto.";
+  if (!dados.tipo) {
+    return { texto: "Selecione o tipo do imóvel.", campo: campo(form, "tipo") };
   }
-  if (editando && dados.arquivosNovos.length === 0 && imagensExistentesIds.length === 0) {
-    return "O anúncio precisa de pelo menos uma foto.";
+  if (!dados.bairro) {
+    return { texto: "Informe o bairro.", campo: campo(form, "bairro") };
+  }
+  if (!dados.rua) {
+    return { texto: "Informe a rua.", campo: campo(form, "rua") };
+  }
+  if (!dados.cep || dados.cep.length !== 8) {
+    return { texto: "Informe o CEP completo, no formato 63900-000.", campo: campo(form, "cep") };
+  }
+  if (!Number.isInteger(dados.preco) || dados.preco < 1) {
+    return { texto: "Informe um preço mensal válido, sem centavos.", campo: campo(form, "preco") };
+  }
+  if (!Number.isInteger(dados.qtd_quartos) || dados.qtd_quartos < 0 || dados.qtd_quartos > 20) {
+    return { texto: "Informe a quantidade de quartos (0 a 20).", campo: campo(form, "qtd_quartos") };
+  }
+  if (!Number.isInteger(dados.qtd_banheiros) || dados.qtd_banheiros < 0 || dados.qtd_banheiros > 20) {
+    return { texto: "Informe a quantidade de banheiros (0 a 20).", campo: campo(form, "qtd_banheiros") };
+  }
+  if (totalFotos() === 0) {
+    return { texto: "Adicione pelo menos uma foto.", campo: inputImagens };
   }
   return null;
 }
 
-function montarPreviewExistente(imagens) {
-  preview.replaceChildren();
-  for (const img of imagens) {
-    const el = document.createElement("img");
-    el.src = urlMidia(img);
-    el.alt = "Foto do anúncio";
-    preview.appendChild(el);
-  }
-}
-
-function montarPreviewNovas(arquivos) {
-  preview.replaceChildren();
-  for (const arquivo of arquivos) {
-    const el = document.createElement("img");
-    el.src = URL.createObjectURL(arquivo);
-    el.alt = "Pré-visualização";
-    preview.appendChild(el);
-  }
-}
+campoCep.addEventListener("input", () => {
+  campoCep.value = cepParaCampo(campoCep.value);
+});
 
 inputImagens.addEventListener("change", () => {
   limparMsg();
   formularioAlterado = true;
-  if (inputImagens.files.length) {
-    montarPreviewNovas([...inputImagens.files]);
-  } else if (imagensExistentesCache.length) {
-    montarPreviewExistente(imagensExistentesCache);
-  }
+  if (inputImagens.files.length) adicionarArquivos([...inputImagens.files]);
 });
 
-form.addEventListener("input", () => {
+form.addEventListener("input", (evento) => {
   formularioAlterado = true;
+  evento.target.classList?.remove("is-invalid");
 });
 
 const linkCancelar = document.getElementById("link-cancelar");
@@ -175,69 +286,71 @@ async function carregarEdicao() {
   definirFormularioAtivo(false);
   tituloForm.textContent = "Editar anúncio";
   btnSalvar.textContent = "Salvar alterações";
-  ajudaFotos.textContent = "Envie novas fotos só se quiser trocar as atuais.";
+  if (ajudaFotos) {
+    ajudaFotos.textContent = "Envie novas fotos só se quiser trocar as atuais.";
+  }
 
   try {
-  const item = await buscarAnuncio(anuncioId);
+    const item = await buscarAnuncio(anuncioId);
 
+    const imovel = item.imovel;
+    if (!imovel?.documentId) throw new Error("Imóvel deste anúncio não foi encontrado.");
 
-  const imovel = item.imovel;
-  if (!imovel?.documentId) throw new Error("Imóvel deste anúncio não foi encontrado.");
+    documentoImovel = imovel.documentId;
+    campo(form, "titulo").value = item.titulo || "";
+    campo(form, "descricao").value = item.descricao || "";
+    campo(form, "preco").value = item.preco ?? "";
+    campo(form, "tipo").value = imovel.tipo || "";
+    campo(form, "bairro").value = imovel.bairro || "";
+    campo(form, "rua").value = imovel.rua || "";
+    campo(form, "numero").value = imovel.numero || "";
+    campo(form, "cep").value = cepParaCampo(imovel.cep);
+    campo(form, "qtd_quartos").value = imovel.qtd_quartos ?? 1;
+    campo(form, "qtd_banheiros").value = imovel.qtd_banheiros ?? 1;
+    campo(form, "aceita_pets").checked = !!imovel.aceita_pets;
+    campo(form, "mobiliado").checked = !!imovel.mobiliado;
 
-  documentoImovel = imovel.documentId;
-  campo(form, "titulo").value = item.titulo || "";
-  campo(form, "descricao").value = item.descricao || "";
-  campo(form, "preco").value = item.preco ?? "";
-  campo(form, "tipo").value = imovel.tipo || "";
-  campo(form, "bairro").value = imovel.bairro || "";
-  campo(form, "rua").value = imovel.rua || "";
-  campo(form, "numero").value = imovel.numero || "";
-  campo(form, "cep").value = cepParaCampo(imovel.cep);
-  campo(form, "qtd_quartos").value = imovel.qtd_quartos ?? 1;
-  campo(form, "qtd_banheiros").value = imovel.qtd_banheiros ?? 1;
-  campo(form, "aceita_pets").checked = !!imovel.aceita_pets;
-  campo(form, "mobiliado").checked = !!imovel.mobiliado;
-
-  imagensExistentesCache = item.imagens || [];
-  imagensExistentesIds = imagensExistentesCache.map((i) => i.id);
-  montarPreviewExistente(imagensExistentesCache);
-  adicionarBotaoExcluir();
-  formularioAlterado = false;
+    imagensExistentes = item.imagens || [];
+    fotosNovas = [];
+    atualizarPreview();
+    adicionarBotaoExcluir();
+    formularioAlterado = false;
   } finally {
     definirFormularioAtivo(true);
   }
 }
 
-
 async function salvar(evento) {
   evento.preventDefault();
   limparMsg();
+  limparInvalidos();
 
   if (!form.checkValidity()) {
     form.reportValidity();
+    const primeiroInvalido = form.querySelector(":invalid");
+    if (primeiroInvalido) primeiroInvalido.classList.add("is-invalid");
     return;
   }
 
   const dados = lerDados(form);
-  const erroValidacao = validar(dados, !!anuncioId);
+  const erroValidacao = validar(dados);
   if (erroValidacao) {
-    mostrarMsg(erroValidacao);
+    mostrarMsg(erroValidacao.texto);
+    marcarInvalido(erroValidacao.campo);
     return;
   }
 
   definirFormularioAtivo(false);
   btnSalvar.textContent = "Salvando…";
 
-  const usuario = obterUsuario();
   let imovelCriado = null;
 
   try {
-    const idsImagens = dados.arquivosNovos.length
-      ? await enviarFotos(dados.arquivosNovos)
-      : imagensExistentesIds;
+    const idsNovas = dados.arquivosNovos.length ? await enviarFotos(dados.arquivosNovos) : [];
+    const idsImagens = [...imagensExistentes.map((img) => img.id), ...idsNovas];
 
     if (anuncioId) {
-      await atualizarImovel(documentoImovel, dados);
+      await atualizarImovel(dados, documentoImovel);
       await atualizarAnuncio(anuncioId, dados, idsImagens);
     } else {
       imovelCriado = await criarImovel(dados);

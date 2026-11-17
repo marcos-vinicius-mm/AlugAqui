@@ -2,7 +2,7 @@ import { obterUsuario } from "../auth.js";
 
 const itensMenu = [
     { id: "home",       texto: "Home",            href: "index.html",         icone: "bi-house",       perfis: ["authenticated", "admin"] },
-    { id: "anunciar",   texto: "Anunciar imóvel", href: "novo-anuncio.html",  icone: "bi-plus-circle", perfis: ["authenticated", "admin"], destaque: true },
+    { id: "anunciar",   texto: "Anunciar imóvel", href: "novo-anuncio.html",  icone: "bi-plus-circle", perfis: ["authenticated", "admin"] },
     { id: "anuncios",   texto: "Meus anúncios",   href: "meus-anuncios.html", icone: "bi-building",    perfis: ["authenticated", "admin"] },
     { id: "favoritos",  texto: "Favoritos",       href: "favoritos.html",     icone: "bi-heart",       perfis: ["authenticated", "admin"] },
     { id: "perfil",     texto: "Meu perfil",      href: "perfil.html",        icone: "bi-person",      perfis: ["authenticated", "admin"] },
@@ -17,22 +17,27 @@ function criar(tag, classes, texto) {
     return el;
 }
 
+function arquivoPagina() {
+    const arquivo = location.pathname.split("/").pop();
+    return arquivo && arquivo.endsWith(".html") ? arquivo : "index.html";
+}
+
 // Função que define quais itens do menu aparecem com base nas permissões do tipo de usuário
 function filtrarItens(usuario, idsOcultos) {
-    const paginaAtual = location.pathname.split("/").pop() || "index.html";
-
     return itensMenu.filter(item =>
         item.perfis.includes(usuario.role.type) &&
-        !idsOcultos.includes(item.id) &&
-        item.href !== paginaAtual
+        !idsOcultos.includes(item.id)
     );
 }
 
-function criarLink(item) {
+function criarLink(item, pagina) {
     const li = criar("li", "nav-item");
     const a = criar("a", "nav-link d-flex align-items-center gap-2");
     a.href = item.href;
-    if (item.destaque) a.classList.add("link-destaque");
+    if (item.href === pagina) {
+        a.classList.add("active");
+        a.setAttribute("aria-current", "page");
+    }
 
     a.appendChild(criar("i", `bi ${item.icone}`));
     a.appendChild(criar("span", "", item.texto));
@@ -56,7 +61,7 @@ function criarBotao() {
     return nav;
 }
 
-function criarMenuLateral(usuario, itens) {
+function criarMenuLateral(usuario, itens, pagina) {
     const menu = criar("div", "offcanvas offcanvas-end");
     menu.id = "menuLateral";
     menu.tabIndex = -1;
@@ -73,7 +78,7 @@ function criarMenuLateral(usuario, itens) {
 
     const body = criar("div", "offcanvas-body d-flex flex-column");
     const ul = criar("ul", "navbar-nav");
-    itens.forEach(item => ul.appendChild(criarLink(item)));
+    itens.forEach(item => ul.appendChild(criarLink(item, pagina)));
     body.appendChild(ul);
 
     const sair = criar("button", "btn btn-cinza-sair rounded-pill mt-auto align-self-center", "Sair");
@@ -102,12 +107,13 @@ function renderNavbar() {
         .map(s => s.trim())
         .filter(Boolean);
 
+    const pagina = arquivoPagina();
     const itens = filtrarItens(usuario, idsOcultos);
 
     container.replaceChildren(criarBotao());
 
     if (!document.getElementById("menuLateral")) {
-        document.body.appendChild(criarMenuLateral(usuario, itens));
+        document.body.appendChild(criarMenuLateral(usuario, itens, pagina));
     }
 }
 
