@@ -1,5 +1,5 @@
-import { obterUsuario } from "./auth.js";
-import { listarComentarios, criarComentario } from "./services/comentarioService.js";
+import { obterUsuario } from "../auth.js";
+import { listarComentarios, criarComentario } from "../services/comentarioService.js";
 
 const params = new URLSearchParams(location.search);
 const anuncioId = params.get("id");

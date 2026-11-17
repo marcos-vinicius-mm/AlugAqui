@@ -5,7 +5,7 @@ import {
   carregarComentarios,
   definirAnunciante,
   prepararFormularioComentario,
-} from "./detalhesComentarios.js";
+} from "./components/detalhesComentarios.js";
 import { montarCarrossel } from "./components/carrosselFotos.js";
 
 const params = new URLSearchParams(location.search);
