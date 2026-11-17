@@ -1,4 +1,5 @@
 import { request } from "./api.js";
+import { cadastro } from "./auth.js";
 import { obterUsuario } from "./auth.js";
 
 (function redirecionarSeLogado() {
@@ -124,7 +125,7 @@ form.addEventListener("submit", async evento => {
     botao.textContent = "Criando conta...";
 
     try {
-        await request("/auth/local/register", { method: "POST", body: corpo, auth: false });
+        await cadastro(dados.username, dados.email, dados.senha, dados.telefone)
 
         msgSucesso.textContent = "Conta criada! Redirecionando para o login...";
         msgSucesso.hidden = false;
