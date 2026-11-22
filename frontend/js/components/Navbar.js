@@ -4,8 +4,8 @@ const itensMenu = [
     { id: "home",       texto: "Home",            href: "index.html",         icone: "bi-house",       perfis: ["authenticated", "admin"] },
     { id: "anunciar",   texto: "Anunciar imóvel", href: "novo-anuncio.html",  icone: "bi-plus-circle", perfis: ["authenticated", "admin"] },
     { id: "anuncios",   texto: "Meus anúncios",   href: "meus-anuncios.html", icone: "bi-building",    perfis: ["authenticated", "admin"] },
-    { id: "favoritos",  texto: "Favoritos",       href: "favoritos.html",     icone: "bi-heart",       perfis: ["authenticated", "admin"] },
-    { id: "perfil",     texto: "Meu perfil",      href: "perfil.html",        icone: "bi-person",      perfis: ["authenticated", "admin"] },
+    { id: "favoritos",  texto: "Favoritos",       href: "MinhaConta.html?aba=favoritos", icone: "bi-heart", perfis: ["authenticated", "admin"] },
+    { id: "perfil",     texto: "Meu perfil",      href: "MinhaConta.html?aba=perfil", icone: "bi-person", perfis: ["authenticated", "admin"] },
     { id: "admin",      texto: "Painel admin",    href: "Admin.html",         icone: "bi-gear",        perfis: ["admin"] },
 ];
 
@@ -34,7 +34,8 @@ function criarLink(item, pagina) {
     const li = criar("li", "nav-item");
     const a = criar("a", "nav-link d-flex align-items-center gap-2");
     a.href = item.href;
-    if (item.href === pagina) {
+    // links com "?aba=..." só ficam ativos na aba correspondente
+    if (item.href === pagina || item.href === pagina + location.search) {
         a.classList.add("active");
         a.setAttribute("aria-current", "page");
     }

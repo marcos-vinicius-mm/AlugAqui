@@ -1085,6 +1085,7 @@ export interface PluginUsersPermissionsUser
   attributes: {
     anuncios: Schema.Attribute.Relation<'oneToMany', 'api::anuncio.anuncio'>;
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    cidade: Schema.Attribute.String;
     comentarios: Schema.Attribute.Relation<
       'oneToMany',
       'api::comentario.comentario'

@@ -18,7 +18,6 @@ const campos = {
 const msgErro = document.getElementById("msg-erro");
 const msgSucesso = document.getElementById("msg-sucesso");
 const botao = document.getElementById("btn-cadastrar");
-const mostrarSenha = document.getElementById("mostrar-senha");
 
 const REGRAS = {
     usernameMin: 3,
@@ -139,10 +138,14 @@ form.addEventListener("submit", async evento => {
 
 /* detalhes de uso */
 
-mostrarSenha.addEventListener("change", () => {
-    const tipo = mostrarSenha.checked ? "text" : "password";
-    campos.senha.type = tipo;
-    campos.confirmar.type = tipo;
+// botões de olho: mostram/ocultam o campo indicado em data-target
+document.querySelectorAll(".btn-toggle-senha").forEach(botaoOlho => {
+    botaoOlho.addEventListener("click", () => {
+        const campo = document.getElementById(botaoOlho.dataset.target);
+        const oculto = campo.type === "password";
+        campo.type = oculto ? "text" : "password";
+        botaoOlho.querySelector("i").className = oculto ? "bi bi-eye-slash" : "bi bi-eye";
+    });
 });
 
 Object.values(campos).forEach(c => c.addEventListener("input", () => c.classList.remove("invalido")));

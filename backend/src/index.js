@@ -1,4 +1,3 @@
-
 'use strict';
 
 const ACOES_AUTENTICADO = [
@@ -16,6 +15,8 @@ const ACOES_AUTENTICADO = [
   'api::comentario.comentario.findOne',
   'api::comentario.comentario.create',
   'plugin::upload.content-api.upload',
+  // editar o próprio perfil (PUT /api/users/me, ver extensions/users-permissions/strapi-server.js)
+  'plugin::users-permissions.user.updateMe',
 ];
 
 const ACOES_PUBLICO = [
@@ -35,6 +36,7 @@ const ACOES_ADMIN = [
   'plugin::users-permissions.user.count',
   'plugin::users-permissions.user.update',
   'plugin::users-permissions.user.me',
+  'plugin::users-permissions.user.updateMe',
 
   // anúncios (ocultar/reativar e remover os de terceiros)
   'api::anuncio.anuncio.find',

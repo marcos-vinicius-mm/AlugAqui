@@ -70,6 +70,9 @@
     "telefone": {
       "type": "string"
     },
+    "cidade": {
+      "type": "string"
+    },
     "anuncios": {
       "type": "relation",
       "relation": "oneToMany",

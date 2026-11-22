@@ -7,6 +7,8 @@ const form = document.getElementById("form-login");
 const campoEmail = document.getElementById("email");
 const campoSenha = document.getElementById("senha");
 const msgErro = document.getElementById("msg-erro");
+const botaoEntrar = form.querySelector('button[type="submit"]');
+const textoBotao = botaoEntrar.innerHTML;
 
 function mostrarErro(texto, campos) {
     msgErro.textContent = texto;
@@ -18,6 +20,15 @@ function mostrarErro(texto, campos) {
 function limparErro() {
     msgErro.hidden = true;
     [campoEmail, campoSenha].forEach(c => c.classList.remove("invalido"));
+}
+
+// traduz as mensagens do Strapi
+function traduzirErro(erro) {
+    const msg = erro.message || "";
+    if (/invalid identifier or password/i.test(msg)) return "E-mail ou senha incorretos.";
+    if (/blocked/i.test(msg)) return "Esta conta foi suspensa por um administrador.";
+    if (/failed to fetch|networkerror|load failed/i.test(msg)) return "Não foi possível conectar ao servidor. Tente novamente.";
+    return msg || "Não foi possível entrar.";
 }
 
 (function redirecionarSeLogado() {
@@ -39,15 +50,17 @@ form.addEventListener("submit", async function (evento) {
         return;
     }
 
-    const conta = await login(email, senha)
+    botaoEntrar.disabled = true;
+    botaoEntrar.textContent = "Entrando...";
 
-    if (!conta) {
-        mostrarErro("E-mail ou senha incorretos.", [campoEmail, campoSenha]);
-        return;
+    try {
+        const conta = await login(email, senha);
+        location.href = conta.role.type === "admin" ? "Admin.html" : "index.html";
+    } catch (erro) {
+        mostrarErro(traduzirErro(erro), [campoEmail, campoSenha]);
+        botaoEntrar.disabled = false;
+        botaoEntrar.innerHTML = textoBotao;
     }
-
-
-    location.href = conta.role.type === "admin" ? "Admin.html" : "index.html";
 });
 
 campoEmail.addEventListener("input", limparErro);
